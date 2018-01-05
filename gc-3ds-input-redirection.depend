@@ -393,3 +393,49 @@
 1515090682 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/gc_controller.h
 	<SDL.h>
 
+1515110603 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.c
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<arpa/inet.h>
+	<SDL.h>
+	<regex.h>
+	<stdlib.h>
+	"binding.h"
+	"gc_controller.h"
+
+1515109727 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.h
+	<sys/types.h>
+	<sys/socket.h>
+	<netinet/in.h>
+	<SDL.h>
+
+1515096187 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/gc_controller.c
+	<regex.h>
+	<SDL.h>
+	"mapping.h"
+
+1515108027 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.h
+	<SDL.h>
+
+1515110482 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/main.c
+	<stdio.h>
+	<stdlib.h>
+	<SDL.h>
+	<unistd.h>
+	"binding.h"
+	"mapping.h"
+	"gc_controller.h"
+
+1515107834 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.c
+	"mapping.h"
+	"gc_controller.h"
+
+1515094669 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/gc_controller.h
+	<SDL.h>
+
+1515108421 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.c
+	"redirection.h"
+
+1515108377 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.h
+

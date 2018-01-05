@@ -6,14 +6,14 @@
 #include <netinet/in.h>
 #include <SDL.h>
 
-struct binding
+struct gc_3ds_binding
 {
+    SDL_GameController *bd_controller;
     struct sockaddr_in bd_3ds_addr;
-    SDL_Joystick *bd_controller;
 };
 
-int bind_controller(const char *addr, int joystic_index, struct binding * const bd);
+int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * const bd);
 
-int bind_controllers(const char * const addrs[], struct binding bds[]);
+int bind_all_gc_controllers(const char * const addrs[], struct gc_3ds_binding bds[]);
 
 #endif // BINDING_H_INCLUDED

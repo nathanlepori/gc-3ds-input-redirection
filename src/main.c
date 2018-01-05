@@ -5,6 +5,7 @@
 
 #include "binding.h"
 #include "mapping.h"
+#include "gc_controller.h"
 
 int main(int argc, char * const argv[])
 {
@@ -14,33 +15,13 @@ int main(int argc, char * const argv[])
         return 1;
     }
 
-    struct binding bindings[4];
+    struct gc_3ds_binding bindings[4];
+    memset(bindings, 0, sizeof(bindings));
 
     // Init SDL
     SDL_Init(SDL_INIT_JOYSTICK);
 
-    // Test
-    add_gc_mapping(2);
+    int err = bind_all_gc_controllers((const char * const*)&argv[1], bindings);
 
-    return 0;
-    // END Test
-
-    int err;
-    // Pass argv from the first element
-    if ((err = bind_controllers((const char * const*) &argv[1], bindings)) != 0)
-    {
-        printf("Error %d while binding controllers.", err);
-        return 1;
-    }
-
-    printf("%s", SDL_JoystickName(bindings[0].bd_controller));
-
-    for (;;)
-    {
-        SDL_JoystickUpdate();
-        //unsigned int a_btn = SDL_JoystickGetButton(SDL_GameControllerGetJoystick(controller.bd_controller), 0);
-        Sint16 a_btn = SDL_JoystickGetButton(bindings[0].bd_controller, 0);
-        printf("%d\n", a_btn);
-    }
     return 0;
 }

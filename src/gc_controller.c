@@ -82,7 +82,7 @@ SDL_GameController *controller_from_port(int port_num)
         {
             // Add mapping
             add_gc_mapping(port_num);
-            // Check if everything is OK or else return NUNLL
+            // Check if everything is OK or else return NULL
             if (!SDL_IsGameController(i))
             {
                 return NULL;
