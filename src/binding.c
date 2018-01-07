@@ -25,7 +25,7 @@ int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * c
     {
         return 1;
     }
-    bd->bd_controller = gc;
+    bd->gc_controller = gc;
 
     // Temp variable
     struct sockaddr_in sockaddr;
@@ -43,7 +43,7 @@ int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * c
     }
 
     // Save reference
-    bd->bd_3ds_addr = sockaddr;
+    bd->_3ds_addr = sockaddr;
 
     return 0;
 }

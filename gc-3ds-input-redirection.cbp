@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="192.168.1.125" />
+				<Option parameters="192.168.178.29" />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="/usr/include/SDL2" />

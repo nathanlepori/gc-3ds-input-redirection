@@ -393,7 +393,7 @@
 1515090682 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/gc_controller.h
 	<SDL.h>
 
-1515110603 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.c
+1515175222 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.c
 	<sys/types.h>
 	<sys/socket.h>
 	<netinet/in.h>
@@ -404,7 +404,7 @@
 	"binding.h"
 	"gc_controller.h"
 
-1515109727 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.h
+1515175206 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/binding.h
 	<sys/types.h>
 	<sys/socket.h>
 	<netinet/in.h>
@@ -415,10 +415,10 @@
 	<SDL.h>
 	"mapping.h"
 
-1515108027 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.h
+1515185258 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.h
 	<SDL.h>
 
-1515110482 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/main.c
+1515345057 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/main.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL.h>
@@ -426,16 +426,27 @@
 	"binding.h"
 	"mapping.h"
 	"gc_controller.h"
+	"redirection.h"
 
-1515107834 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.c
+1515185448 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.c
 	"mapping.h"
 	"gc_controller.h"
 
 1515094669 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/gc_controller.h
 	<SDL.h>
 
-1515108421 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.c
+1515366044 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.c
+	<SDL.h>
+	<sys/socket.h>
+	<stdlib.h>
+	<math.h>
+	<arpa/inet.h>
+	<unistd.h>
 	"redirection.h"
+	"mapping.h"
+	"binding.h"
 
-1515108377 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.h
+1515345048 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.h
+	"binding.h"
+	"mapping.h"
 

@@ -8,8 +8,8 @@
 
 struct gc_3ds_binding
 {
-    SDL_GameController *bd_controller;
-    struct sockaddr_in bd_3ds_addr;
+    SDL_GameController *gc_controller;
+    struct sockaddr_in _3ds_addr;
 };
 
 int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * const bd);

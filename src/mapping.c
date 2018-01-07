@@ -10,7 +10,7 @@ const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
     .x = SDL_CONTROLLER_BUTTON_X,
 
     .start = SDL_CONTROLLER_BUTTON_START,
-    .home = SDL_CONTROLLER_BUTTON_INVALID,
+    .home = SDL_CONTROLLER_BUTTON_GUIDE,
     .select = SDL_CONTROLLER_BUTTON_BACK,
     .power = SDL_CONTROLLER_BUTTON_INVALID,
 
@@ -19,16 +19,19 @@ const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
     .dpdown = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
     .dpright = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
 
-    .zl.button = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-    .zr.button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    .zl.m_type = 1,
+    .zl.m.button = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    .zr.m_type = 1,
+    .zr.m.button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    .l.m_type = 0,
+    .l.m.axis = SDL_CONTROLLER_AXIS_TRIGGERLEFT,
+    .r.m_type = 0,
+    .r.m.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
 
-    .leftx = SDL_CONTROLLER_AXIS_LEFTX,
-    .lefty = SDL_CONTROLLER_AXIS_LEFTY,
-    .rightx = SDL_CONTROLLER_AXIS_RIGHTX,
-    .righty = SDL_CONTROLLER_AXIS_RIGHTY,
-
-    .l.axis = SDL_CONTROLLER_AXIS_TRIGGERLEFT,
-    .r.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT
+    .cpadx = SDL_CONTROLLER_AXIS_LEFTX,
+    .cpady = SDL_CONTROLLER_AXIS_LEFTY,
+    .cstickx = SDL_CONTROLLER_AXIS_RIGHTX,
+    .csticky = SDL_CONTROLLER_AXIS_RIGHTY
 };
 
 // TODO: Here GUID is extracted procedurally and joined together with the other settings. If the GUID is unique for every controller it could save on processing time by hardcoding the whole mapping.
