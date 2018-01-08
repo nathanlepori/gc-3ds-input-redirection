@@ -415,38 +415,40 @@
 	<SDL.h>
 	"mapping.h"
 
-1515185258 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.h
+1515421633 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.h
 	<SDL.h>
 
-1515345057 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/main.c
+1515421815 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/main.c
 	<stdio.h>
 	<stdlib.h>
 	<SDL.h>
 	<unistd.h>
+	<errno.h>
 	"binding.h"
 	"mapping.h"
 	"gc_controller.h"
 	"redirection.h"
 
-1515185448 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.c
+1515421918 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/mapping.c
 	"mapping.h"
 	"gc_controller.h"
 
 1515094669 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/gc_controller.h
 	<SDL.h>
 
-1515366044 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.c
+1515421696 source:/home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.c
 	<SDL.h>
 	<sys/socket.h>
 	<stdlib.h>
 	<math.h>
 	<arpa/inet.h>
 	<unistd.h>
+	<stdbool.h>
 	"redirection.h"
 	"mapping.h"
 	"binding.h"
 
-1515345048 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.h
+1515419709 /home/user1/Documenti/3ds-gc-controller/gc-3ds-input-redirection/src/redirection.h
 	"binding.h"
 	"mapping.h"
 

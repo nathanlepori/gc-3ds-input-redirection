@@ -3,7 +3,7 @@
 
 #include <SDL.h>
 
-#define AXIS_TO_BUTTON_DEADZONE 8000
+#define AXIS_TO_BUTTON_DEADZONE 5000
 
 struct _3ds_mapping
 {

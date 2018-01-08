@@ -10,7 +10,7 @@ struct _3ds_input_state
     uint16_t cpadx, cpady, cstickx, csticky;
 };
 
-int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int sockfd);
+int send_input_state(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int sockfd);
 
 int gc_input_loop(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int delay_ms);
 

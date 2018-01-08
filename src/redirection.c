@@ -4,6 +4,7 @@
 #include <math.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "redirection.h"
 #include "mapping.h"
@@ -86,7 +87,6 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc, const struct
 
 
     is->home = SDL_GameControllerGetButton(gc, mp->home);
-
     is->power = SDL_GameControllerGetButton(gc, mp->power);
 
     return is;
@@ -129,8 +129,8 @@ int input_state_to_data(const struct _3ds_input_state *is, uint32_t data[5])
 
     nhid |= (is->zl << 10) | (is->zr << 9);
 
-    //iface |= is->home << 0;
-    //iface |= is->power << 1;
+    iface |= is->home << 0;
+    iface |= is->power << 1;
 
     // Eveything together
     data[0] = hid;
@@ -142,6 +142,42 @@ int input_state_to_data(const struct _3ds_input_state *is, uint32_t data[5])
     return 0;
 }
 
+bool input_state_equals(const struct _3ds_input_state *o, const struct _3ds_input_state *n, uint8_t cpad_e, uint8_t cstick_e)
+{
+    return
+        o->a == n->a &&
+        o->b == n->b &&
+        o->select == n->select &&
+        o->start == n->start &&
+        o->dpright == n->dpright &&
+        o->dpleft == n->dpleft &&
+        o->dpup == n->dpup &&
+        o->dpdown == n->dpdown &&
+        o->r == n->r &&
+        o->l == n->l &&
+        o->x == n->x &&
+        o->y == n->y &&
+        abs(o->cpadx - n->cpadx) < cpad_e &&
+        abs(o->cpady - n->cpady) < cpad_e &&
+        abs(o->cstickx - n->cstickx) < cstick_e &&
+        abs(o->csticky - n->csticky) < cstick_e &&
+        o->zr == n->zr &&
+        o->zl == n->zl &&
+        o->home == n->home &&
+        o->power == n->power;
+}
+
+/*
+ * Just a helper to send given input.
+ */
+int send_input(int sockfd, const struct sockaddr_in *addr, uint32_t data[5])
+{
+    return sendto(sockfd, data, 20, 0, (const struct sockaddr*) addr, sizeof(addr));
+}
+
+/*
+ * Sends current input state in one shot ignoring previous state, returning error of sendto() or 0 on success.
+ */
 int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int sockfd)
 {
     const struct _3ds_input_state *is = get_gc_input(bd->gc_controller, mp);
@@ -149,7 +185,7 @@ int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp
     uint32_t data[5];
     input_state_to_data(is, data);
 
-    if (sendto(sockfd, data, sizeof(data), 0, (const struct sockaddr*) &bd->_3ds_addr, sizeof(bd->_3ds_addr)) == -1)
+    if (send_input(sockfd, &bd->_3ds_addr, data) == -1)
     {
         return -1;
     }
@@ -159,14 +195,36 @@ int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp
 
 int gc_input_loop(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int delay_ms)
 {
+    // Open socket.
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    // Store old state here for optimization (do not send if current state is identical)
+    const struct _3ds_input_state *oldis = NULL;
     for (;;)
     {
-        send_gc_input(bd, mp, sockfd);
+        // Current input state
+        const struct _3ds_input_state *is = get_gc_input(bd->gc_controller, mp);
+        // Skip this time if states are identical
+        if (oldis != NULL && input_state_equals(oldis, is, 30, 5))
+        {
+            continue;
+        }
+
+        uint32_t data[5];
+        // Convert to binary data
+        input_state_to_data(is, data);
+        // Send input to 3DS
+        //if (send_input(sockfd, &bd->_3ds_addr, data) == -1)
+        if (sendto(sockfd, data, 20, 0, (const struct sockaddr*) &bd->_3ds_addr, sizeof(bd->_3ds_addr)) == -1)
+        {
+            return -1;
+        }
+        // If delay is more than 0, wait
         if (delay_ms > 0)
         {
             usleep(delay_ms);
         }
+        // Assign current state to old state
+        oldis = is;
     }
     return 0;
 }

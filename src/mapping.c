@@ -1,7 +1,7 @@
 #include "mapping.h"
 #include "gc_controller.h"
 
-#define GC_MAPPING "a:b0,b:b3,y:b2,x:b1,start:b7,guide:back:,dpup:b8,dpleft:b10,dpdown:b9,dpright:b11,leftshoulder:,rightshoulder:b6,leftstick:,rightstick:,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,z:b6,platform:Linux"
+#define GC_MAPPING "a:b0,b:b3,y:b2,x:b1,start:b7,guide:,back:,dpup:b8,dpleft:b10,dpdown:b9,dpright:b11,leftshoulder:,rightshoulder:b6,leftstick:,rightstick:,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,z:b6,platform:Linux"
 
 const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
     .a = SDL_CONTROLLER_BUTTON_A,

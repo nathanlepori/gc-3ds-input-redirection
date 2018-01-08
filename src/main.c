@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <SDL.h>
 #include <unistd.h>
+#include <errno.h>
 
 #include "binding.h"
 #include "mapping.h"
@@ -28,9 +29,10 @@ int main(int argc, char * const argv[])
         return 1;
     }
 
-    if (gc_input_loop(&bds[0], &default_3ds_mapping, 300) == -1)
+    printf("Controller bound. Entering input loop.\n");
+    if (gc_input_loop(&bds[0], &default_3ds_mapping, 0) == -1)
     {
-        printf("Could not connect.");
+        printf("Could not connect. Errno: %d", errno);
     }
 
     return 0;
