@@ -1,7 +1,7 @@
 #ifndef GC_CONTROLLER_H_INCLUDED
 #define GC_CONTROLLER_H_INCLUDED
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 SDL_Joystick *joystick_from_port(int port_num);
 

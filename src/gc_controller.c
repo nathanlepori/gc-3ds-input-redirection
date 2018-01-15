@@ -1,8 +1,8 @@
 #include <regex.h>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include "mapping.h"
+#include "../include/mapping.h"
 
 #define BD_GC_NAME_REGEX "Wii U GameCube Adapter Port ([1-4])"
 
@@ -34,9 +34,9 @@ int get_gc_controller_port(int device_index)
     // Port as a string
     char port_str[1];
     //Extract match
-    strncpy(port_str, &joy_name[pmatch[1].rm_so], pmatch[1].rm_eo - pmatch[1].rm_so);
+    strncpy(port_str, &joy_name[pmatch[1].rm_so], (size_t) (pmatch[1].rm_eo - pmatch[1].rm_so));
     // Convert to integer
-    int port = atoi(port_str);
+    int port = (int) strtol(port_str, NULL, 10);
 
     // Free regex pointer memory
     regfree(&preg);
@@ -81,7 +81,7 @@ SDL_GameController *controller_from_port(int port_num)
         if (p != 0 && p == port_num)
         {
             // Add mapping
-            add_gc_mapping(port_num);
+            add_gc_mapping();
             // Check if everything is OK or else return NULL
             if (!SDL_IsGameController(i))
             {

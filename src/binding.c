@@ -3,22 +3,19 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
-#include <regex.h>
-#include <stdlib.h>
-
-#include "binding.h"
-#include "gc_controller.h"
+#include "../include/binding.h"
+#include "../include/gc_controller.h"
 
 #define BD_3DS_PORT 4950
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+//#define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
 /*
  * Returns 0 on success, 1 on controller error and -1 on address error.
  */
-int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * const bd)
+int bind_controller(const char *addr, int port_num, struct gc_3ds_binding *const bd)
 {
     SDL_GameController *gc = controller_from_port(port_num);
     if (!gc)
@@ -48,7 +45,7 @@ int bind_gc_controller(const char *addr, int port_num, struct gc_3ds_binding * c
     return 0;
 }
 
-int bind_all_gc_controllers(const char * const addrs[], struct gc_3ds_binding bds[])
+int bind_all_controllers(const char *const *addrs, struct gc_3ds_binding *bds)
 {
     // No joystick connected, return error
     if (SDL_NumJoysticks() == 0)
@@ -64,7 +61,7 @@ int bind_all_gc_controllers(const char * const addrs[], struct gc_3ds_binding bd
         // Store the temporary binding
         struct gc_3ds_binding bd;
         // Try to bind
-        int err = bind_gc_controller(addrs[c_bound], i, &bd);
+        int err = bind_controller(addrs[c_bound], i, &bd);
         // If function return 0 binding is successful
         if (err == 0)
         {

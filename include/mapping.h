@@ -1,7 +1,7 @@
 #ifndef MAPPING_H_INCLUDED
 #define MAPPING_H_INCLUDED
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #define AXIS_TO_BUTTON_DEADZONE 5000
 
@@ -24,6 +24,6 @@ struct _3ds_mapping
     SDL_GameControllerAxis cpadx, cpady, cstickx, csticky;
 } const default_3ds_mapping;
 
-int add_gc_mapping(int port_num);
+int add_gc_mapping();
 
 #endif // MAPPING_H_INCLUDED

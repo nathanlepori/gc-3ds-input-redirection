@@ -1,20 +1,34 @@
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <sys/socket.h>
-#include <stdlib.h>
-#include <math.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <signal.h>
+#include <time.h>
+#include <errno.h>
 
-#include "redirection.h"
-#include "mapping.h"
-#include "binding.h"
+#include "../include/redirection.h"
 
 #define CPAD_MAX 0x5d0
 #define CSTICK_MAX 0x7f
 
-const struct _3ds_input_state *get_gc_input(SDL_GameController *gc, const struct _3ds_mapping *mp)
-{
+// 60 FPS max processing time
+#define MAX_PROC_TIME_NSEC 16666666.666666667
+
+// TODO: Implement GC sticks dead zone to send "free" data to 3DS sticks.
+
+struct input_loop_args {
+    const struct gc_3ds_binding *bd;
+    int delay_ms;
+};
+
+long timespec_diff_nsec(struct timespec *start, struct timespec *stop) {
+    return (stop->tv_sec - start->tv_sec) * 1000000000 + stop->tv_nsec - start->tv_nsec;
+}
+
+const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
+    const struct _3ds_mapping *mp = &default_3ds_mapping;
+
     // Update the controllers
     SDL_GameControllerUpdate();
 
@@ -30,22 +44,18 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc, const struct
     is->dpup = SDL_GameControllerGetButton(gc, mp->dpup);
     is->dpdown = SDL_GameControllerGetButton(gc, mp->dpdown);
     // R
-    if (mp->r.m_type)
-    {
+    if (mp->r.m_type) {
         // Button
         is->r = SDL_GameControllerGetButton(gc, mp->r.m.button);
-    } else
-    {
+    } else {
         // Axis
         is->r = SDL_GameControllerGetAxis(gc, mp->r.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
     }
     // L
-    if (mp->l.m_type)
-    {
+    if (mp->l.m_type) {
         // Button
         is->l = SDL_GameControllerGetButton(gc, mp->l.m.button);
-    } else
-    {
+    } else {
         // Axis
         is->l = SDL_GameControllerGetAxis(gc, mp->l.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
     }
@@ -65,22 +75,18 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc, const struct
 
     // ZR, ZL
     // ZL
-    if (mp->zl.m_type)
-    {
+    if (mp->zl.m_type) {
         // Button
         is->zl = SDL_GameControllerGetButton(gc, mp->zl.m.button);
-    } else
-    {
+    } else {
         // Axis
         is->zl = SDL_GameControllerGetAxis(gc, mp->zl.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
     }
     // ZR
-    if (mp->zr.m_type)
-    {
+    if (mp->zr.m_type) {
         // Button
         is->zr = SDL_GameControllerGetButton(gc, mp->zr.m.button);
-    } else
-    {
+    } else {
         // Axis
         is->zr = SDL_GameControllerGetAxis(gc, mp->zr.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
     }
@@ -132,7 +138,7 @@ int input_state_to_data(const struct _3ds_input_state *is, uint32_t data[5])
     iface |= is->home << 0;
     iface |= is->power << 1;
 
-    // Eveything together
+    // Everything together
     data[0] = hid;
     data[1] = touch;
     data[2] = cpad;
@@ -172,7 +178,7 @@ bool input_state_equals(const struct _3ds_input_state *o, const struct _3ds_inpu
  */
 int send_input(int sockfd, const struct sockaddr_in *addr, uint32_t data[5])
 {
-    return sendto(sockfd, data, 20, 0, (const struct sockaddr*) addr, sizeof(addr));
+    return sendto(sockfd, data, 20, 0, (const struct sockaddr *) addr, sizeof(*addr));
 }
 
 /*
@@ -180,7 +186,7 @@ int send_input(int sockfd, const struct sockaddr_in *addr, uint32_t data[5])
  */
 int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int sockfd)
 {
-    const struct _3ds_input_state *is = get_gc_input(bd->gc_controller, mp);
+    const struct _3ds_input_state *is = get_gc_input(bd->gc_controller);
 
     uint32_t data[5];
     input_state_to_data(is, data);
@@ -190,41 +196,104 @@ int send_gc_input(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp
         return -1;
     }
 
+    free((void *) is);
     return 0;
 }
 
-int gc_input_loop(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int delay_ms)
+void signal_handler(int signal) {
+    printf("Interrupt detected. Exiting.\n");
+    exit(0);
+}
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
+
+int start_binding_input_loop(const struct gc_3ds_binding *bd, int delay_ms)
 {
     // Open socket.
-    int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
+    int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (sockfd == -1) {
+        return -1;
+    }
     // Store old state here for optimization (do not send if current state is identical)
     const struct _3ds_input_state *oldis = NULL;
-    for (;;)
+    // Handle signals
+    signal(SIGINT, signal_handler);
+
+    // Monitor time and notify when delay gets too long
+    struct timespec start, stop;
+    long latency;
+    // Main input loop
+    while (1)
     {
+        // Get time
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
         // Current input state
-        const struct _3ds_input_state *is = get_gc_input(bd->gc_controller, mp);
+        const struct _3ds_input_state *is = get_gc_input(bd->gc_controller);
         // Skip this time if states are identical
         if (oldis != NULL && input_state_equals(oldis, is, 30, 5))
         {
             continue;
         }
 
+        // Structure to hold data that will be sent to 3DS
         uint32_t data[5];
         // Convert to binary data
         input_state_to_data(is, data);
         // Send input to 3DS
-        //if (send_input(sockfd, &bd->_3ds_addr, data) == -1)
-        if (sendto(sockfd, data, 20, 0, (const struct sockaddr*) &bd->_3ds_addr, sizeof(bd->_3ds_addr)) == -1)
+        if (send_input(sockfd, &bd->_3ds_addr, data) == -1)
         {
-            return -1;
+            //return -1;
+            printf("Warning: Unable to send input. Error msg: %s\n", strerror(errno));
         }
         // If delay is more than 0, wait
         if (delay_ms > 0)
         {
             usleep(delay_ms);
         }
+
+        // Free memory from old state that's not longer in use
+        free((void *) oldis);
         // Assign current state to old state
         oldis = is;
+        // Get elapsed time
+        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop);
+        latency = timespec_diff_nsec(&start, &stop);
+        // Notify in case processing time exceeds 60 FPS
+        if (latency > MAX_PROC_TIME_NSEC) {
+            printf("Warning: detected high latency. Unresponsive input may occur. Latency: %lu nanoseconds\n", latency);
+        }
+    }
+}
+
+#pragma clang diagnostic pop
+
+int start_routine_input_loop(struct input_loop_args *args) {
+    return start_binding_input_loop(args->bd, args->delay_ms);
+}
+
+int start_input_loop(const struct gc_3ds_binding *bds[], int num_bds, int delay_ms) {
+    SDL_Thread *threads[num_bds];
+    // Start threads
+    for (int i = 0; i < num_bds; ++i) {
+        struct input_loop_args args;
+        args.bd = bds[i];
+        args.delay_ms = delay_ms;
+        char t_name[14] = "GC3DSBinding", t_num[2];
+        sprintf(t_num, "%u", i);
+        strcat(t_name, t_num);
+        if ((threads[i] = SDL_CreateThread(start_routine_input_loop, t_name, &args)) == NULL) {
+            return -1;
+        }
+    }
+    // Wait for threads
+    for (int j = 0; j < num_bds; ++j) {
+        int err = 0;
+        //terr = pthread_join(threads[j], (void **) &err);
+        SDL_WaitThread(threads[j], &err);
+        if (err) {
+            return -1;
+        }
     }
     return 0;
 }

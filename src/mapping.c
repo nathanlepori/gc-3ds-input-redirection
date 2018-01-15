@@ -1,7 +1,8 @@
-#include "mapping.h"
-#include "gc_controller.h"
+#include "../include/mapping.h"
+#include "../include/gc_controller.h"
 
 #define GC_MAPPING "a:b0,b:b3,y:b2,x:b1,start:b7,guide:,back:,dpup:b8,dpleft:b10,dpdown:b9,dpright:b11,leftshoulder:,rightshoulder:b6,leftstick:,rightstick:,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,z:b6,platform:Linux"
+#define GC_MAPPING_STR "0300000057696920552047616d654300,Wii U GameCube Adapter,a:b0,b:b3,y:b2,x:b1,start:b7,guide:,back:,dpup:b8,dpleft:b10,dpdown:b9,dpright:b11,leftshoulder:,rightshoulder:b6,leftstick:,rightstick:,leftx:a0,lefty:a1,rightx:a3,righty:a4,lefttrigger:a2,righttrigger:a5,z:b6,platform:Linux"
 
 const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
     .a = SDL_CONTROLLER_BUTTON_A,
@@ -21,12 +22,14 @@ const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
 
     .zl.m_type = 1,
     .zl.m.button = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
-    .zr.m_type = 1,
-    .zr.m.button = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+        // Default mapping is GC R button on 3DS ZR button...
+        .zr.m_type = 0,
+        .zr.m.button = SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
     .l.m_type = 0,
     .l.m.axis = SDL_CONTROLLER_AXIS_TRIGGERLEFT,
-    .r.m_type = 0,
-    .r.m.axis = SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
+        // ...and Z on R button
+        .r.m_type = 1,
+        .r.m.axis = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
 
     .cpadx = SDL_CONTROLLER_AXIS_LEFTX,
     .cpady = SDL_CONTROLLER_AXIS_LEFTY,
@@ -34,10 +37,9 @@ const struct _3ds_mapping default_3ds_mapping = (struct _3ds_mapping) {
     .csticky = SDL_CONTROLLER_AXIS_RIGHTY
 };
 
-// TODO: Here GUID is extracted procedurally and joined together with the other settings. If the GUID is unique for every controller it could save on processing time by hardcoding the whole mapping.
-// For comparison, discovered GUID is: 0300000057696920552047616d654300
-
-int add_gc_mapping(int port_num)
+// Here GUID is extracted procedurally and joined together with the other settings. I keep this implementation just in case it could be useful.
+// Discovered GUID is: 0300000057696920552047616d654300
+int add_gc_mapping_proc(int port_num)
 {
     // Get GUID string
     SDL_Joystick *joy = joystick_from_port(port_num);
@@ -64,4 +66,8 @@ int add_gc_mapping(int port_num)
     strcat(m_str, GC_MAPPING);
 
     return SDL_GameControllerAddMapping(m_str);
+}
+
+int add_gc_mapping() {
+    return SDL_GameControllerAddMapping(GC_MAPPING_STR);
 }
