@@ -10,10 +10,6 @@ struct _3ds_input_state
     uint16_t cpadx, cpady, cstickx, csticky;
 };
 
-int send_input_state(const struct gc_3ds_binding *bd, const struct _3ds_mapping *mp, int sockfd);
-
-int start_binding_input_loop(const struct gc_3ds_binding *bd, int delay_ms);
-
-int start_input_loop(const struct gc_3ds_binding *bds[], int num_bds, int delay_ms);
+int start_input_loop(struct gc_3ds_binding *bds[], const char *addrs[]);
 
 #endif // REDIRECTION_H_INCLUDED
