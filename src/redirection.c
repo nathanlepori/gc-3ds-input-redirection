@@ -8,7 +8,7 @@
 #define CSTICK_MAX 0x7f
 
 // TODO: Implement GC sticks dead zone to send "free" data to 3DS sticks.
-#define GC_STICK_DEADZONE 2000
+#define GC_STICK_DEADZONE 3000
 #define GC_TRIGGER_DEADZONE 3000
 
 const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
@@ -34,7 +34,7 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
         is->r = SDL_GameControllerGetButton(gc, mp->r.m.button);
     } else {
         // Axis
-        is->r = SDL_GameControllerGetAxis(gc, mp->r.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
+        is->r = (uint8_t) (SDL_GameControllerGetAxis(gc, mp->r.m.axis) >= TRIGGER_TO_BUTTON_DEADZONE ? 1 : 0);
     }
     // L
     if (mp->l.m_type) {
@@ -42,21 +42,41 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
         is->l = SDL_GameControllerGetButton(gc, mp->l.m.button);
     } else {
         // Axis
-        is->l = SDL_GameControllerGetAxis(gc, mp->l.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
+        is->l = (uint8_t) (SDL_GameControllerGetAxis(gc, mp->l.m.axis) >= TRIGGER_TO_BUTTON_DEADZONE ? 1 : 0);
     }
     is->x = SDL_GameControllerGetButton(gc, mp->x);
     is->y = SDL_GameControllerGetButton(gc, mp->y);
 
     // Circle pad
     // 0x8000 = SDL max axis value
-    is->cpadx = SDL_GameControllerGetAxis(gc, mp->cpadx) * CPAD_MAX / 0x8000 + 0x800;
-    is->cpady = -SDL_GameControllerGetAxis(gc, mp->cpady) * CPAD_MAX / 0x8000 + 0x800;
+    int16_t ctx = SDL_GameControllerGetAxis(gc, mp->cpadx);
+    int16_t cty = SDL_GameControllerGetAxis(gc, mp->cpady);
+    if (abs(ctx) < GC_STICK_DEADZONE)
+        // Cpad neutral position
+        is->cpadx = 0x7ff;
+    else
+        is->cpadx = (uint16_t) (ctx * CPAD_MAX / 0x8000 + 0x800);
+    if (abs(cty) < GC_STICK_DEADZONE)
+        is->cpady = 0x7ff;
+    else
+        is->cpady = (uint16_t) (-cty * CPAD_MAX / 0x8000 + 0x800);
 
     // C stick
     int16_t cx = SDL_GameControllerGetAxis(gc, mp->cstickx);
     int16_t cy = -SDL_GameControllerGetAxis(gc, mp->csticky);
-    is->cstickx = M_SQRT1_2 * (cx + cy) * CSTICK_MAX / 0x8000 + 0x80;
-    is->csticky = M_SQRT1_2 * (cy - cx) * CSTICK_MAX / 0x8000 + 0x80;
+    /*if (abs(cx) < GC_STICK_DEADZONE)
+        // Cstick neutral position
+        is->cstickx = 0x80;
+    else
+        is->cstickx = M_SQRT1_2 * (cx + cy) * CSTICK_MAX / 0x8000 + 0x80;*/
+    /*if (abs(cy) < GC_STICK_DEADZONE)
+        // Cstick neutral position
+        is->csticky = 0x80;
+    else
+        is->csticky = M_SQRT1_2 * (cy - cx) * CSTICK_MAX / 0x8000 + 0x80;*/
+    // Applying deadzone to cstick leads to unstable results. Skipping this part
+    is->cstickx = (uint16_t) (M_SQRT1_2 * (cx + cy) * CSTICK_MAX / 0x8000 + 0x80);
+    is->csticky = (uint16_t) (M_SQRT1_2 * (cy - cx) * CSTICK_MAX / 0x8000 + 0x80);
 
     // ZR, ZL
     // ZL
@@ -65,7 +85,7 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
         is->zl = SDL_GameControllerGetButton(gc, mp->zl.m.button);
     } else {
         // Axis
-        is->zl = SDL_GameControllerGetAxis(gc, mp->zl.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
+        is->zl = (uint8_t) (SDL_GameControllerGetAxis(gc, mp->zl.m.axis) > TRIGGER_TO_BUTTON_DEADZONE ? 1 : 0);
     }
     // ZR
     if (mp->zr.m_type) {
@@ -73,7 +93,7 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
         is->zr = SDL_GameControllerGetButton(gc, mp->zr.m.button);
     } else {
         // Axis
-        is->zr = SDL_GameControllerGetAxis(gc, mp->zr.m.axis) > AXIS_TO_BUTTON_DEADZONE ? 1 : 0;
+        is->zr = (uint8_t) (SDL_GameControllerGetAxis(gc, mp->zr.m.axis) > TRIGGER_TO_BUTTON_DEADZONE ? 1 : 0);
     }
 
 
@@ -85,16 +105,17 @@ const struct _3ds_input_state *get_gc_input(SDL_GameController *gc) {
 
 int input_state_to_data(const struct _3ds_input_state *is, uint32_t data[5])
 {
+    // Just to be sure
     memset(data, 0, 20);
 
     // Notice: all O3DS normal buttons are sent inverted (0 = pressed)
     uint32_t hid = 0xfff;
     // Touch screen default
     uint32_t touch = 0x2000000;
-    // Circle pad
-    uint32_t cpad = 0x7ff7ff;
-    // C stick
-    uint16_t cstick = 0x8080;
+    // Circle pad. Default: 0x7ff7ff
+    uint32_t cpad;
+    // C stick. Default: 0x8080
+    uint16_t cstick;
     // ZR ZL
     uint16_t nhid = 0x81;
     // Home, power
@@ -152,6 +173,7 @@ int send_gc_input(const struct gc_3ds_binding *bd, int sockfd) {
     uint32_t data[5];
     // Convert to binary data
     input_state_to_data(is, data);
+
     // Send input to 3DS
     ssize_t res = send_input(sockfd, &bd->_3ds_addr, data);
     if (res == -1)
@@ -188,6 +210,8 @@ int start_input_loop(struct gc_3ds_binding *bds[], const char *addrs[]) {
             case SDL_CONTROLLERBUTTONUP:
                 // Whenever a button or axis changes, send new state all in a chunk,
                 // so that multiple contemporary changes can be sent at once
+
+                // Send input
                 if (send_gc_input(binding_from_gc_id(event.cbutton.which, bds), sockfd) == -1) {
                     printf("Warning: Could not send data.");
                 }
@@ -205,6 +229,7 @@ int start_input_loop(struct gc_3ds_binding *bds[], const char *addrs[]) {
                     // ... or a trigger
                     break;
                 }
+                // Send input
                 if (send_gc_input(binding_from_gc_id(event.caxis.which, bds), sockfd) == -1) {
                     printf("Warning: Could not send data.");
                 }
@@ -213,6 +238,8 @@ int start_input_loop(struct gc_3ds_binding *bds[], const char *addrs[]) {
             case SDL_QUIT:
                 printf("Interrupt detected. Exiting.");
                 return 0;
+            default:
+                break;
         }
     }
 }

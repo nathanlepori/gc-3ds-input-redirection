@@ -4,13 +4,23 @@
 #include <arpa/inet.h>
 
 #include <SDL2/SDL.h>
+#include <time.h>
 
 #include "../include/binding.h"
 #include "../include/gc_controller.h"
 
 #define BD_3DS_PORT 4950
 
-//#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+void print_binding_info(unsigned int port, const char *addr, unsigned int status) {
+    // Get time string
+    time_t t = time(NULL);
+    char *tstr = asctime(localtime(&t));
+    // Get rid of newline char
+    tstr[strlen(tstr) - 1] = '\0';
+
+    // Print info
+    printf("[%s] Port %u -> %s: %s\n", tstr, port, addr, status ? "connected" : "disconnected");
+}
 
 /*
  * Returns 0 on success, 1 on controller error and -1 on address error.
@@ -101,7 +111,7 @@ int bind_controllers(const char *addrs[], struct gc_3ds_binding *bds[], int num_
     // Count of controllers bound so far
     int c_bound = 0;
     // Loop over the controllers
-    for (int i = 0; i < 4; i++)
+    for (unsigned int p = 0; p < 4; p++)
     {
         // If there are no more addresses left, just exit loop
         if (c_bound >= num_bds) {
@@ -111,7 +121,7 @@ int bind_controllers(const char *addrs[], struct gc_3ds_binding *bds[], int num_
         struct gc_3ds_binding *bd = malloc(sizeof(struct gc_3ds_binding));
 
         // Try to bind
-        int err = bind_controller(addrs[c_bound], i, bd);
+        int err = bind_controller(addrs[c_bound], p, bd);
         // Check errors
         if (err == -1)
         {
@@ -126,7 +136,7 @@ int bind_controllers(const char *addrs[], struct gc_3ds_binding *bds[], int num_
             continue;
         }
         // Print some information
-        printf("Port %u -> %s: connected\n", i, addrs[c_bound]);
+        print_binding_info(p, addrs[c_bound], 1);
         // If function returns 0, binding is successful
         bds[c_bound++] = bd;
     }
@@ -203,7 +213,8 @@ int bind_next_controller(const char *addrs[], struct gc_3ds_binding *bds[], int 
     bind_controller_from_index(addr, device_index, bds[bdi]);
 
     // Print some information
-    printf("Port %u -> %s: connected\n", controller_port_from_index(device_index), addr);
+    // Here cast is safe since it is for sure a GC controller
+    print_binding_info((unsigned int) controller_port_from_index(device_index), addr, 1);
 
     return 0;
 }
@@ -224,7 +235,8 @@ bool remove_controller(struct gc_3ds_binding *bds[], int inst_id) {
             }
 
             // Print some info
-            printf("Port %u -> %s: disconnected\n", controller_port_from_id(inst_id), addr);
+            // Here cast is safe since it is for sure a GC controller
+            print_binding_info((unsigned int) controller_port_from_id(inst_id), addr, 0);
 
             free(bds[i]);
             bds[i] = NULL;

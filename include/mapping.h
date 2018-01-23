@@ -3,7 +3,8 @@
 
 #include <SDL2/SDL.h>
 
-#define AXIS_TO_BUTTON_DEADZONE 5000
+// Must be equal or higher than triggers deadzone
+#define TRIGGER_TO_BUTTON_DEADZONE 6000
 
 struct _3ds_mapping
 {
