@@ -11,6 +11,6 @@ file(GLOB SOURCES "src/*.c")
 
 set(LIBS ${SDL2_LIBRARIES})
 
-add_executable(gc_3ds_input_redirection ${SOURCES})
+add_executable(gc-3ds-input-redirection ${SOURCES})
 
-target_link_libraries(gc_3ds_input_redirection ${LIBS})
+target_link_libraries(gc-3ds-input-redirection ${LIBS})

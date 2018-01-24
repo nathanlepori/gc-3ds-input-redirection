@@ -7,7 +7,6 @@
 #define CPAD_MAX 0x5d0
 #define CSTICK_MAX 0x7f
 
-// TODO: Implement GC sticks dead zone to send "free" data to 3DS sticks.
 #define GC_STICK_DEADZONE 3000
 #define GC_TRIGGER_DEADZONE 3000
 
@@ -236,7 +235,7 @@ int start_input_loop(struct gc_3ds_binding *bds[], const char *addrs[]) {
                 break;
             }
             case SDL_QUIT:
-                printf("Interrupt detected. Exiting.");
+                printf("Interrupt detected. Exiting.\n");
                 return 0;
             default:
                 break;
